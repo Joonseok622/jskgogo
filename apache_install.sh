@@ -7,7 +7,7 @@ PCRE_URL="https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz
 
 # 설치 디렉토리 및 빌드 디렉토리 설정
 INSTALL_DIR="/usr/local/apache"
-BUILD_DIR="/tmp/apache_build"
+BUILD_DIR="/usr/local/src"
 
 # 필수 패키지 설치 함수
 install_required_packages() {
@@ -117,4 +117,3 @@ echo "mod_jk가 성공적으로 설치되었습니다."
 echo "Apache 서비스는 systemctl을 통해 관리할 수 있습니다. (예: sudo systemctl start httpd)"
 
 # 빌드 디렉토리 정리
-rm -rf $BUILD_DIR
