@@ -71,19 +71,6 @@ install_java() {
   return 0
 }
 
-# Java 17 최신 버전 URL 가져오는 함수
-get_latest_java17_url() {
-  BASE_URL="https://download.oracle.com/java/17/archive/"
-  LATEST_JAVA_VERSION=$(curl -s "$BASE_URL" | grep -oP 'jdk-\d+\.\d+\.\d+_linux-x64_bin\.tar\.gz' | sort -V | tail -1)
-
-  if [ -z "$LATEST_JAVA_VERSION" ]; then
-    echo "Java 17 최신 버전을 확인할 수 없습니다. 설치를 중단합니다." | tee -a "$LOG_FILE"
-    exit 1
-  fi
-
-  echo "${BASE_URL}${LATEST_JAVA_VERSION}"
-}
-
 # Java 설치 및 환경 변수 설정 함수
 setup_java() {
   local JAVA_URL=$1
@@ -113,8 +100,8 @@ if [[ "$TOMCAT_VERSION" == "11.0" ]]; then
       echo "현재 Java 버전은 $JAVA_VERSION입니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 17 이상이 필요합니다."
       read -p "Java 17을 압축 파일로 설치하시겠습니까? (y/n): " install_java_choice
       if [[ "$install_java_choice" == "y" ]]; then
-        # Java 17 최신 버전 다운로드 및 설치
-        JAVA_URL=$(get_latest_java17_url)
+        # Java 17 다운로드 및 설치 (고정된 URL 사용)
+        JAVA_URL="https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.tar.gz"
         setup_java "$JAVA_URL"
       else
         echo "Java 17이 설치되지 않아 수동으로 설치해야 합니다." | tee -a "$LOG_FILE"
@@ -124,8 +111,8 @@ if [[ "$TOMCAT_VERSION" == "11.0" ]]; then
     echo "Java가 설치되어 있지 않습니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 17 이상이 필요합니다."
     read -p "Java 17을 압축 파일로 설치하시겠습니까? (y/n): " install_java_choice
     if [[ "$install_java_choice" == "y" ]]; then
-      # Java 17 최신 버전 다운로드 및 설치
-      JAVA_URL=$(get_latest_java17_url)
+      # Java 17 다운로드 및 설치 (고정된 URL 사용)
+      JAVA_URL="https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.tar.gz"
       setup_java "$JAVA_URL"
     else
       echo "Java 17이 설치되지 않아 수동으로 설치해야 합니다." | tee -a "$LOG_FILE"
