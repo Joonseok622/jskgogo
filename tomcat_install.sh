@@ -53,17 +53,23 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
     
     if [[ "$JAVA_MAJOR_VERSION" -lt 11 ]]; then
       echo "현재 Java 버전은 $JAVA_VERSION입니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 11 이상이 필요합니다."
-      read -p "Java 11을 설치하시겠습니까? (y/n): " install_java
+      read -p "Java 11을 압축 파일로 설치하시겠습니까? (y/n): " install_java
       if [[ "$install_java" == "y" ]]; then
-        if command -v yum &> /dev/null; then
-          sudo yum install -y java-11-openjdk-devel 2>> "$LOG_FILE"
-        elif command -v apt-get &> /dev/null; then
-          sudo apt-get update >> "$LOG_FILE" 2>&1
-          sudo apt-get install -y openjdk-11-jdk >> "$LOG_FILE" 2>&1
-        else
-          echo "지원하지 않는 패키지 매니저입니다. 수동으로 Java 11을 설치하세요." | tee -a "$LOG_FILE"
-          exit 1
-        fi
+        # Java 11 다운로드 및 설치
+        JAVA_URL="https://download.oracle.com/java/11/latest/jdk-11_linux-x64_bin.tar.gz"
+        JAVA_DIR="/usr/local/java"
+        
+        sudo mkdir -p "$JAVA_DIR"
+        cd /tmp || exit
+        wget "$JAVA_URL" -O java.tar.gz 2>> "$LOG_FILE"
+        sudo tar -zxvf java.tar.gz -C "$JAVA_DIR" --strip-components=1 >> "$LOG_FILE" 2>&1
+        rm java.tar.gz
+
+        # 자바 환경 변수 설정
+        echo "export JAVA_HOME=$JAVA_DIR" | sudo tee -a /etc/profile
+        echo "export PATH=\$PATH:\$JAVA_HOME/bin" | sudo tee -a /etc/profile
+        source /etc/profile
+
         # 설치 후 3초 대기
         sleep 3
       else
@@ -73,17 +79,23 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
     fi
   else
     echo "Java가 설치되어 있지 않습니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 11 이상이 필요합니다."
-    read -p "Java 11을 설치하시겠습니까? (y/n): " install_java
+    read -p "Java 11을 압축 파일로 설치하시겠습니까? (y/n): " install_java
     if [[ "$install_java" == "y" ]]; then
-      if command -v yum &> /dev/null; then
-        sudo yum install -y java-11-openjdk-devel 2>> "$LOG_FILE"
-      elif command -v apt-get &> /dev/null; then
-        sudo apt-get update >> "$LOG_FILE" 2>&1
-        sudo apt-get install -y openjdk-11-jdk >> "$LOG_FILE" 2>&1
-      else
-        echo "지원하지 않는 패키지 매니저입니다. 수동으로 Java 11을 설치하세요." | tee -a "$LOG_FILE"
-        exit 1
-      fi
+      # Java 11 다운로드 및 설치
+      JAVA_URL="https://download.oracle.com/java/11/latest/jdk-11_linux-x64_bin.tar.gz"
+      JAVA_DIR="/usr/local/java"
+
+      sudo mkdir -p "$JAVA_DIR"
+      cd /tmp || exit
+      wget "$JAVA_URL" -O java.tar.gz 2>> "$LOG_FILE"
+      sudo tar -zxvf java.tar.gz -C "$JAVA_DIR" --strip-components=1 >> "$LOG_FILE" 2>&1
+      rm java.tar.gz
+
+      # 자바 환경 변수 설정
+      echo "export JAVA_HOME=$JAVA_DIR" | sudo tee -a /etc/profile
+      echo "export PATH=\$PATH:\$JAVA_HOME/bin" | sudo tee -a /etc/profile
+      source /etc/profile
+
       # 설치 후 3초 대기
       sleep 3
     else
