@@ -48,18 +48,18 @@ esac
 # Java 설치 경로
 JAVA_DIR="/usr/local/java"
 
-# Tomcat 10.1 이상 버전 설치 시 자바 버전 확인
-if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
+# Tomcat 11 설치 시 자바 17 버전 이상 필요 확인
+if [[ "$TOMCAT_VERSION" == "11.0" ]]; then
   if type -p java > /dev/null; then
     JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
     JAVA_MAJOR_VERSION=$(echo $JAVA_VERSION | cut -d'.' -f1)
     
-    if [[ "$JAVA_MAJOR_VERSION" -lt 11 ]]; then
-      echo "현재 Java 버전은 $JAVA_VERSION입니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 11 이상이 필요합니다."
-      read -p "Java 11을 압축 파일로 설치하시겠습니까? (y/n): " install_java
+    if [[ "$JAVA_MAJOR_VERSION" -lt 17 ]]; then
+      echo "현재 Java 버전은 $JAVA_VERSION입니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 17 이상이 필요합니다."
+      read -p "Java 17을 압축 파일로 설치하시겠습니까? (y/n): " install_java
       if [[ "$install_java" == "y" ]]; then
-        # Java 11 다운로드 및 설치
-        JAVA_URL="https://download.oracle.com/java/11/latest/jdk-11_linux-x64_bin.tar.gz"
+        # Java 17 다운로드 및 설치
+        JAVA_URL="https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz"
         
         sudo mkdir -p "$JAVA_DIR"
         cd /tmp || exit
@@ -75,16 +75,16 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
         # 설치 후 3초 대기
         sleep 3
       else
-        echo "Java 11이 설치되지 않아 Tomcat 설치를 취소합니다." | tee -a "$LOG_FILE"
+        echo "Java 17이 설치되지 않아 Tomcat 설치를 취소합니다." | tee -a "$LOG_FILE"
         exit 1
       fi
     fi
   else
-    echo "Java가 설치되어 있지 않습니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 11 이상이 필요합니다."
-    read -p "Java 11을 압축 파일로 설치하시겠습니까? (y/n): " install_java
+    echo "Java가 설치되어 있지 않습니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 17 이상이 필요합니다."
+    read -p "Java 17을 압축 파일로 설치하시겠습니까? (y/n): " install_java
     if [[ "$install_java" == "y" ]]; then
-      # Java 11 다운로드 및 설치
-      JAVA_URL="https://download.oracle.com/java/11/latest/jdk-11_linux-x64_bin.tar.gz"
+      # Java 17 다운로드 및 설치
+      JAVA_URL="https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz"
 
       sudo mkdir -p "$JAVA_DIR"
       cd /tmp || exit
@@ -100,7 +100,7 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
       # 설치 후 3초 대기
       sleep 3
     else
-      echo "Java 11이 설치되지 않아 Tomcat 설치를 취소합니다." | tee -a "$LOG_FILE"
+      echo "Java 17이 설치되지 않아 Tomcat 설치를 취소합니다." | tee -a "$LOG_FILE"
       exit 1
     fi
   fi
