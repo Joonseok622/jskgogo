@@ -45,6 +45,9 @@ case $version_choice in
     ;;
 esac
 
+# Java 설치 경로
+JAVA_DIR="/usr/local/java"
+
 # Tomcat 10.1 이상 버전 설치 시 자바 버전 확인
 if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
   if type -p java > /dev/null; then
@@ -57,7 +60,6 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
       if [[ "$install_java" == "y" ]]; then
         # Java 11 다운로드 및 설치
         JAVA_URL="https://download.oracle.com/java/11/latest/jdk-11_linux-x64_bin.tar.gz"
-        JAVA_DIR="/usr/local/java"
         
         sudo mkdir -p "$JAVA_DIR"
         cd /tmp || exit
@@ -83,7 +85,6 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
     if [[ "$install_java" == "y" ]]; then
       # Java 11 다운로드 및 설치
       JAVA_URL="https://download.oracle.com/java/11/latest/jdk-11_linux-x64_bin.tar.gz"
-      JAVA_DIR="/usr/local/java"
 
       sudo mkdir -p "$JAVA_DIR"
       cd /tmp || exit
@@ -100,6 +101,35 @@ if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
       sleep 3
     else
       echo "Java 11이 설치되지 않아 Tomcat 설치를 취소합니다." | tee -a "$LOG_FILE"
+      exit 1
+    fi
+  fi
+fi
+
+# Tomcat 10 이하 버전 설치 시 자바 1.8 설치 확인
+if [[ "$TOMCAT_MAJOR" -le 10 ]]; then
+  if ! type -p java > /dev/null; then
+    echo "Java가 설치되어 있지 않습니다. Tomcat ${TOMCAT_VERSION}을 설치하려면 Java 1.8이 필요합니다."
+    read -p "Java 1.8을 압축 파일로 설치하시겠습니까? (y/n): " install_java
+    if [[ "$install_java" == "y" ]]; then
+      # Java 1.8 다운로드 및 설치
+      JAVA_URL="https://download.oracle.com/otn-pub/java/jdk/8u301-b09/jdk-8u301-linux-x64.tar.gz"
+      
+      sudo mkdir -p "$JAVA_DIR"
+      cd /tmp || exit
+      wget --header "Cookie: oraclelicense=accept-securebackup-cookie" "$JAVA_URL" -O java.tar.gz 2>> "$LOG_FILE"
+      sudo tar -zxvf java.tar.gz -C "$JAVA_DIR" --strip-components=1 >> "$LOG_FILE" 2>&1
+      rm java.tar.gz
+
+      # 자바 환경 변수 설정
+      echo "export JAVA_HOME=$JAVA_DIR" | sudo tee -a /etc/profile
+      echo "export PATH=\$PATH:\$JAVA_HOME/bin" | sudo tee -a /etc/profile
+      source /etc/profile
+
+      # 설치 후 3초 대기
+      sleep 3
+    else
+      echo "Java 1.8이 설치되지 않아 Tomcat 설치를 취소합니다." | tee -a "$LOG_FILE"
       exit 1
     fi
   fi
