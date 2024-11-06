@@ -16,21 +16,27 @@ read -p "번호를 입력하세요 (1, 2, 3, 4, 5, 6): " version_choice
 
 case $version_choice in
   1)
+    TOMCAT_MAJOR="8"
     TOMCAT_VERSION="8.0"
     ;;
   2)
+    TOMCAT_MAJOR="8"
     TOMCAT_VERSION="8.5"
     ;;
   3)
+    TOMCAT_MAJOR="9"
     TOMCAT_VERSION="9.0"
     ;;
   4)
+    TOMCAT_MAJOR="10"
     TOMCAT_VERSION="10.0"
     ;;
   5)
+    TOMCAT_MAJOR="10"
     TOMCAT_VERSION="10.1"
     ;;
   6)
+    TOMCAT_MAJOR="11"
     TOMCAT_VERSION="11.0"
     ;;
   *)
@@ -40,7 +46,7 @@ case $version_choice in
 esac
 
 # Tomcat 10.1 이상 버전 설치 시 자바 버전 확인
-if [[ "$TOMCAT_VERSION" == "10.1" ]] || [[ "$TOMCAT_VERSION" == "11.0" ]]; then
+if [[ "$TOMCAT_MAJOR" -ge 10 ]] && [[ "$TOMCAT_VERSION" != "10.0" ]]; then
   if type -p java > /dev/null; then
     JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
     JAVA_MAJOR_VERSION=$(echo $JAVA_VERSION | cut -d'.' -f1)
@@ -87,22 +93,24 @@ if [[ "$TOMCAT_VERSION" == "10.1" ]] || [[ "$TOMCAT_VERSION" == "11.0" ]]; then
   fi
 fi
 
-# Tomcat 다운로드 URL 설정
-BASE_URL="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_VERSION:0:2}/v${TOMCAT_VERSION}."
-DOWNLOAD_URL=""
+# Tomcat 다운로드 URL 설정 (메이저 버전 먼저 확인 후 마이너 버전 찾기)
+BASE_URL="https://archive.apache.org/dist/tomcat/tomcat-${TOMCAT_MAJOR}/"
+LATEST_MINOR_VERSION=""
 
 # 최신 패치 버전 확인 및 다운로드 URL 설정
-for i in {99..0}; do
-  if curl --head --silent --fail "${BASE_URL}${i}/bin/apache-tomcat-${TOMCAT_VERSION}.${i}.tar.gz" > /dev/null; then
-    DOWNLOAD_URL="${BASE_URL}${i}/bin/apache-tomcat-${TOMCAT_VERSION}.${i}.tar.gz"
+for version in $(curl -s "${BASE_URL}" | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/v//g' | sort -V -r); do
+  if [[ $version == ${TOMCAT_VERSION}* ]]; then
+    LATEST_MINOR_VERSION=$version
     break
   fi
 done
 
-if [ -z "$DOWNLOAD_URL" ]; then
+if [ -z "$LATEST_MINOR_VERSION" ]; then
   echo "해당 Tomcat 버전의 다운로드 URL을 찾을 수 없습니다." | tee -a "$LOG_FILE"
   exit 1
 fi
+
+DOWNLOAD_URL="${BASE_URL}v${LATEST_MINOR_VERSION}/bin/apache-tomcat-${LATEST_MINOR_VERSION}.tar.gz"
 
 # 다운로드 및 설치
 INSTALL_DIR="/usr/local/tomcat${TOMCAT_VERSION}"
@@ -121,5 +129,5 @@ echo "export CATALINA_HOME=$INSTALL_DIR" >> ~/.bashrc
 echo "export PATH=\$PATH:\$CATALINA_HOME/bin" >> ~/.bashrc
 source ~/.bashrc
 
-echo "Tomcat ${TOMCAT_VERSION}가 ${INSTALL_DIR}에 설치되었습니다."
+echo "Tomcat ${LATEST_MINOR_VERSION}가 ${INSTALL_DIR}에 설치되었습니다."
 echo "설치 로그는 ${LOG_FILE}에 저장되었습니다."
