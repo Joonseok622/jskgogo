@@ -52,18 +52,24 @@ JAVA_DIR="/usr/local/java"
 install_java() {
   local JAVA_URL=$1
   sudo mkdir -p "$JAVA_DIR"
+  if [[ $? -ne 0 ]]; then
+    echo "디렉토리 생성에 실패했습니다: $JAVA_DIR" | tee -a "$LOG_FILE"
+    return 1
+  fi
+  
   cd /tmp || exit
   wget "$JAVA_URL" -O java.tar.gz 2>> "$LOG_FILE"
-  if [[ $? -ne 0 ]]; then
+  if [[ $? -ne 0 || ! -f "java.tar.gz" ]]; then
     echo "Java 다운로드에 실패했습니다. 설치를 중단합니다." | tee -a "$LOG_FILE"
     rm -f java.tar.gz
     return 1
   fi
 
   sudo tar -zxvf java.tar.gz -C "$JAVA_DIR" --strip-components=1 >> "$LOG_FILE" 2>&1
-  if [[ $? -ne 0 ]]; then
+  if [[ $? -ne 0 || ! -d "$JAVA_DIR" || -z "$(ls -A $JAVA_DIR)" ]]; then
     echo "Java 설치에 실패했습니다. 설치를 중단합니다." | tee -a "$LOG_FILE"
     rm -f java.tar.gz
+    sudo rm -rf "$JAVA_DIR"
     return 1
   fi
 
