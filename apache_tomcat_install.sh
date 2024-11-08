@@ -106,11 +106,23 @@ if [[ "$INSTALL_TOMCAT" =~ ^[Yy]$ ]]; then
   read -p "Java를 설치하시겠습니까? (Y/N): " INSTALL_JAVA
   if [[ "$INSTALL_JAVA" =~ ^[Yy]$ ]]; then
     if [[ $TOMCAT_VERSION =~ ^(8\.0|8\.5|9\.0|10\.0)$ ]]; then
-      sudo yum install -y java-1.8.0-openjdk-devel | tee -a $LOGFILE
+      if [[ $OS_NAME == "Ubuntu" ]]; then
+        sudo apt-get install -y openjdk-8-jdk | tee -a $LOGFILE
+      else
+        sudo yum install -y java-1.8.0-openjdk-devel | tee -a $LOGFILE
+      fi
     elif [[ $TOMCAT_VERSION == "10.1" ]]; then
-      sudo yum install -y java-11-openjdk-devel | tee -a $LOGFILE
+      if [[ $OS_NAME == "Ubuntu" ]]; then
+        sudo apt-get install -y openjdk-11-jdk | tee -a $LOGFILE
+      else
+        sudo yum install -y java-11-openjdk-devel | tee -a $LOGFILE
+      fi
     elif [[ $TOMCAT_VERSION == "11.0" ]]; then
-      sudo yum install -y java-17-openjdk-devel | tee -a $LOGFILE
+      if [[ $OS_NAME == "Ubuntu" ]]; then
+        sudo apt-get install -y openjdk-17-jdk | tee -a $LOGFILE
+      else
+        sudo yum install -y java-17-openjdk-devel | tee -a $LOGFILE
+      fi
     fi
     if [[ $? -eq 0 ]]; then
       echo "Java 설치 완료" | tee -a $LOGFILE
