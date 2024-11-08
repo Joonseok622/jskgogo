@@ -24,14 +24,14 @@ if [[ "$INSTALL_APACHE" =~ ^[Yy]$ ]]; then
   # 필수 패키지 설치
   if [[ $OS_NAME == "Ubuntu" ]]; then
     sudo apt-get update
-    sudo apt-get install -y build-essential libpcre3 libpcre3-dev zlib1g-dev libssl-dev | tee -a $LOGFILE
+    sudo apt-get install -y build-essential libpcre3 libpcre3-dev zlib1g-dev libssl-dev libexpat1-dev | tee -a $LOGFILE
   elif [[ $OS_NAME == "CentOS Linux" || $OS_NAME == "Rocky Linux" ]]; then
     if grep -q -i "release 7" /etc/redhat-release; then
       # CentOS 7은 yum 사용
-      sudo yum install -y gcc gcc-c++ make pcre pcre-devel zlib-devel openssl-devel | tee -a $LOGFILE
+      sudo yum install -y gcc gcc-c++ make pcre pcre-devel zlib-devel openssl-devel expat-devel | tee -a $LOGFILE
     else
       # CentOS 8 이상이나 Rocky Linux는 dnf 사용
-      sudo dnf install -y gcc gcc-c++ make pcre pcre-devel zlib-devel openssl-devel | tee -a $LOGFILE
+      sudo dnf install -y gcc gcc-c++ make pcre pcre-devel zlib-devel openssl-devel expat-devel | tee -a $LOGFILE
     fi
   fi
 
