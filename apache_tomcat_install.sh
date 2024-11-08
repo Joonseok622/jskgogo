@@ -4,6 +4,7 @@ LOGFILE="/usr/local/src/apache_tomcat_install.log"
 SRC_DIR="/usr/local/src"
 APACHE_INSTALL_DIR="/usr/local/apache"
 TOMCAT_INSTALL_DIR="/usr/local/tomcat"
+PCRE_INSTALL_DIR="/usr/local/pcre"
 
 echo "===========================" | tee -a $LOGFILE
 echo "Apache & Tomcat 설치 스크립트" | tee -a $LOGFILE
@@ -24,15 +25,30 @@ if [[ "$INSTALL_APACHE" =~ ^[Yy]$ ]]; then
   # 필수 패키지 설치
   if [[ $OS_NAME == "Ubuntu" ]]; then
     sudo apt-get update
-    sudo apt-get install -y build-essential libpcre3 libpcre3-dev zlib1g-dev libssl-dev libexpat1-dev | tee -a $LOGFILE
+    sudo apt-get install -y build-essential zlib1g-dev libssl-dev libexpat1-dev curl | tee -a $LOGFILE
   elif [[ $OS_NAME == "CentOS Linux" || $OS_NAME == "Rocky Linux" ]]; then
     if grep -q -i "release 7" /etc/redhat-release; then
       # CentOS 7은 yum 사용
-      sudo yum install -y gcc gcc-c++ make pcre pcre-devel zlib-devel openssl-devel expat-devel | tee -a $LOGFILE
+      sudo yum install -y gcc gcc-c++ make zlib-devel openssl-devel expat-devel curl | tee -a $LOGFILE
     else
       # CentOS 8 이상이나 Rocky Linux는 dnf 사용
-      sudo dnf install -y gcc gcc-c++ make pcre pcre-devel zlib-devel openssl-devel expat-devel | tee -a $LOGFILE
+      sudo dnf install -y gcc gcc-c++ make zlib-devel openssl-devel expat-devel curl | tee -a $LOGFILE
     fi
+  fi
+
+  # PCRE 소스 다운로드 및 설치
+  cd $SRC_DIR
+  PCRE_LATEST_URL=$(curl -s https://ftp.pcre.org/pub/pcre/ | grep -oP 'pcre-\d+\.\d+(\.\d+)?\.tar\.gz' | sort -Vr | head -n 1)
+  wget "https://ftp.pcre.org/pub/pcre/$PCRE_LATEST_URL"
+  tar -zxvf $PCRE_LATEST_URL
+  PCRE_DIR=$(basename $PCRE_LATEST_URL .tar.gz)
+  cd $PCRE_DIR
+  ./configure --prefix=$PCRE_INSTALL_DIR | tee -a $LOGFILE
+  if make | tee -a $LOGFILE && make install | tee -a $LOGFILE; then
+    echo "PCRE 설치 완료" | tee -a $LOGFILE
+  else
+    echo "PCRE 설치 실패. 로그를 확인하세요." | tee -a $LOGFILE
+    exit 1
   fi
 
   # 최신 Apache, APR, APR-Util 버전 가져오기
@@ -59,7 +75,7 @@ if [[ "$INSTALL_APACHE" =~ ^[Yy]$ ]]; then
 
   # Apache 다운로드 및 설치
   cd $APACHE_DIR
-  ./configure --prefix=$APACHE_INSTALL_DIR --enable-so --enable-ssl --enable-rewrite --with-included-apr | tee -a $LOGFILE
+  ./configure --prefix=$APACHE_INSTALL_DIR --enable-so --enable-ssl --enable-rewrite --with-included-apr --with-pcre=$PCRE_INSTALL_DIR | tee -a $LOGFILE
   if make | tee -a $LOGFILE && make install | tee -a $LOGFILE; then
     echo "Apache 설치 완료" | tee -a $LOGFILE
   else
