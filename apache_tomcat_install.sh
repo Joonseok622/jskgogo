@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e  # 명령어 실패 시 스크립트 중단
+
 LOGFILE="/usr/local/src/apache_tomcat_install.log"
 SRC_DIR="/usr/local/src"
 APACHE_INSTALL_DIR="/usr/local/apache"
@@ -38,18 +40,13 @@ if [[ "$INSTALL_APACHE" =~ ^[Yy]$ ]]; then
 
   # PCRE 소스 다운로드 및 설치
   cd $SRC_DIR
-  PCRE_LATEST_URL=$(curl -s https://ftp.pcre.org/pub/pcre/ | grep -oP 'pcre-\d+\.\d+(\.\d+)?\.tar\.gz' | sort -Vr | head -n 1)
-  wget "https://ftp.pcre.org/pub/pcre/$PCRE_LATEST_URL"
-  tar -zxvf $PCRE_LATEST_URL
-  PCRE_DIR=$(basename $PCRE_LATEST_URL .tar.gz)
-  cd $PCRE_DIR
+  wget --no-check-certificate -O pcre-8.45.tar.gz https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz/download
+  tar xvfz pcre-8.45.tar.gz
+  cd pcre-8.45
   ./configure --prefix=$PCRE_INSTALL_DIR | tee -a $LOGFILE
-  if make | tee -a $LOGFILE && make install | tee -a $LOGFILE; then
-    echo "PCRE 설치 완료" | tee -a $LOGFILE
-  else
-    echo "PCRE 설치 실패. 로그를 확인하세요." | tee -a $LOGFILE
-    exit 1
-  fi
+  make | tee -a $LOGFILE
+  make install | tee -a $LOGFILE
+  echo "PCRE 설치 완료" | tee -a $LOGFILE
 
   # 최신 Apache, APR, APR-Util 버전 가져오기
   cd $SRC_DIR
@@ -76,12 +73,9 @@ if [[ "$INSTALL_APACHE" =~ ^[Yy]$ ]]; then
   # Apache 다운로드 및 설치
   cd $APACHE_DIR
   ./configure --prefix=$APACHE_INSTALL_DIR --enable-so --enable-ssl --enable-rewrite --with-included-apr --with-pcre=$PCRE_INSTALL_DIR | tee -a $LOGFILE
-  if make | tee -a $LOGFILE && make install | tee -a $LOGFILE; then
-    echo "Apache 설치 완료" | tee -a $LOGFILE
-  else
-    echo "Apache 설치 실패. 로그를 확인하세요." | tee -a $LOGFILE
-    exit 1
-  fi
+  make | tee -a $LOGFILE
+  make install | tee -a $LOGFILE
+  echo "Apache 설치 완료" | tee -a $LOGFILE
 else
   echo "Apache 설치를 건너뜁니다." | tee -a $LOGFILE
 fi
@@ -111,12 +105,7 @@ if [[ "$INSTALL_TOMCAT" =~ ^[Yy]$ ]]; then
   wget $TOMCAT_DOWNLOAD_URL -O tomcat.tar.gz
   tar -zxvf tomcat.tar.gz
   mv apache-tomcat-${TOMCAT_VERSION}.0 $TOMCAT_INSTALL_DIR
-  if [[ $? -eq 0 ]]; then
-    echo "Tomcat ${TOMCAT_VERSION} 설치 완료" | tee -a $LOGFILE
-  else
-    echo "Tomcat 설치 실패. 로그를 확인하세요." | tee -a $LOGFILE
-    exit 1
-  fi
+  echo "Tomcat ${TOMCAT_VERSION} 설치 완료" | tee -a $LOGFILE
 
   # Java 설치 여부 확인
   read -p "Java를 설치하시겠습니까? (Y/N): " INSTALL_JAVA
@@ -140,11 +129,7 @@ if [[ "$INSTALL_TOMCAT" =~ ^[Yy]$ ]]; then
         sudo yum install -y java-17-openjdk-devel | tee -a $LOGFILE
       fi
     fi
-    if [[ $? -eq 0 ]]; then
-      echo "Java 설치 완료" | tee -a $LOGFILE
-    else
-      echo "Java 설치 실패. 로그를 확인하세요." | tee -a $LOGFILE
-    fi
+    echo "Java 설치 완료" | tee -a $LOGFILE
   fi
 else
   echo "Tomcat 설치를 건너뜁니다." | tee -a $LOGFILE
